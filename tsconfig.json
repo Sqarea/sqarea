@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "lib": ["es2017", "dom"],
+    "baseUrl": "./",
+    "paths": {
+      "components": ["./src/components"],
+      "core": ["./src/core"],
+      "systems": ["./src/systems"],
+      "utils": ["./src/utils"]
+    }
+  }
+}

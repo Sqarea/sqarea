@@ -15,7 +15,8 @@
   "author": "Daniel Belohlavek",
   "license": "MIT",
   "dependencies": {
-    "pixi.js": "^4.8.2"
+    "pixi.js": "^4.8.2",
+    "src": "^1.1.2"
   },
   "devDependencies": {
     "@types/pixi.js": "^4.8.3",
