@@ -1,9 +1,12 @@
 import * as PIXI from 'pixi.js'
-import { engine, Entity } from './core'
+import { Engine } from './core'
 import { BoxShape, Transform } from './components'
+import { MovementSystem } from './systems/MovementSystem'
+import { PlayableEntity } from './entities/PlayableEntity'
 
 const view = document.getElementById('game') as HTMLCanvasElement
 const app = new PIXI.Application({ view })
+const engine = Engine.getInstance(app)
 
 function init() {
   app.ticker.add(dt => {
@@ -11,9 +14,10 @@ function init() {
   })
 }
 
-const entity = new Entity()
+const entity = new PlayableEntity()
 entity.addComponent(new BoxShape())
 entity.addComponent(new Transform())
+engine.addSystem(new MovementSystem(entity))
 engine.addEntity(entity)
 
 init()

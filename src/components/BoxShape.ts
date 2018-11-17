@@ -1,14 +1,14 @@
-import { ShapeComponent, BOX_SHAPE } from '../components'
+import { ShapeComponent } from './ShapeComponent'
+import { BOX_SHAPE } from './types'
 
 export class BoxShape extends ShapeComponent {
   x: number
   y: number
-  height: number = 1
-  width: number = 1
+  height: number = 100
+  width: number = 100
 
   constructor() {
     super('shape')
-    console.log('boxy')
   }
 
   getKind() {

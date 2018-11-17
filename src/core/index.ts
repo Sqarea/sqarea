@@ -1,6 +1,4 @@
-import { Engine } from './Engine'
-export * from './Component'
-export * from './Entity'
-export * from './System'
-
-export const engine = new Engine()
+export { Engine } from './Engine'
+export { Component } from './Component'
+export { Entity } from './Entity'
+export { System } from './System'
