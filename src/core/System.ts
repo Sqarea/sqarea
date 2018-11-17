@@ -1,4 +1,4 @@
-import { uuid } from 'src/utils'
+import { uuid } from '../utils'
 
 export abstract class System {
   // @internal

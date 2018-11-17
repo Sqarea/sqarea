@@ -1,8 +1,8 @@
-import { uuid } from 'src/utils'
-import { ComponentType } from 'src/components/ComponentType'
 import { Component } from './Component'
+import { ComponentType } from '../components/types'
+import { uuid } from '../utils'
 
-export abstract class Entity {
+export class Entity {
   // @internal
   uuid: string = uuid()
 

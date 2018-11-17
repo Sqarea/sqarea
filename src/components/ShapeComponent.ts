@@ -1,5 +1,5 @@
-import { Component } from 'src/core'
-import { ShapeKind } from 'src/components'
+import { Component } from '../core'
+import { ShapeKind } from '../components'
 
 export abstract class ShapeComponent extends Component {
   abstract getKind(): ShapeKind

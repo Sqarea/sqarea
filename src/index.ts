@@ -1,16 +1,20 @@
 import * as PIXI from 'pixi.js'
-import { Engine } from 'src/core'
+import { engine, Entity } from './core'
+import { BoxShape, Transform } from './components'
 
 const view = document.getElementById('game') as HTMLCanvasElement
 const app = new PIXI.Application({ view })
 
 function init() {
-  const engine = new Engine()
-
   app.ticker.add(dt => {
     engine.update(dt)
   })
 }
+
+const entity = new Entity()
+entity.addComponent(new BoxShape())
+entity.addComponent(new Transform())
+engine.addEntity(entity)
 
 init()
 

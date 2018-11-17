@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
-import { System, Entity } from 'src/core'
-import { Transform, ShapeComponent, BoxShape, BOX_SHAPE } from 'src/components'
+import { System, Entity } from '../core'
+import { Transform, ShapeComponent, BoxShape, BOX_SHAPE } from '../components'
 
 export class Engine {
   systems: Record<string, System> = {}
