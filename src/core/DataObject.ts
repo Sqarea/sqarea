@@ -24,38 +24,15 @@ export namespace DataObject {
     }
   }
 
-  /**
-   * Creates a proxy that forces this property to be read-only at runtime
-   */
-  export function readonly(target: AbstractDataObject, propertyKey: string) {
-    if (delete (target as any)[propertyKey]) {
-      Object.defineProperty(target, propertyKey.toString(), {
-        get: function(this: AbstractDataObject) {
-          if (this.data && propertyKey in this.data === false) {
-            throw new Error(`Property "${propertyKey}" is uninitialized`)
-          }
-          return this.data[propertyKey]
-        },
-        set: function(this: AbstractDataObject, value: any) {
-          if (this.data && propertyKey in this.data) {
-            throw new Error(`Property "${propertyKey}" is readonly`)
-          }
-
-          DataObject.setValue(this, propertyKey, value)
-        },
-        enumerable: true,
-        configurable: false
-      })
-    }
-  }
-
   export function setValue(target: AbstractDataObject, key: string, value: any) {
     if (!this.data) {
       // hack for property initializers
       this.data = {}
     }
 
-    if (typeof value === 'object') {
+    // If the value is an array or an object create a child proxy
+    // TODO: investigate recursive proxies if needed
+    if (Array.isArray(value) || toString.call(value) === '[object Object]') {
       let self = target
       target.data[key] = new Proxy(value, {
         set(target, property, val) {

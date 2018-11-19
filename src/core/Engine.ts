@@ -4,8 +4,6 @@ import { ShapeComponent, Transform, BoxShape } from 'src/components'
 import { BOX_SHAPE, ComponentType } from 'src/components/types'
 import { uuid } from 'src/utils'
 
-declare const process
-
 export class Engine {
   systems: Record<string, System> = {}
   entities: Record<string, Entity> = {}
@@ -28,10 +26,6 @@ export class Engine {
 
   private constructor(app: PIXI.Application) {
     this.app = app
-
-    if (process.env.NODE_ENV === 'dev') {
-      window['engine'] = this
-    }
   }
 
   addSystem(system: System) {
@@ -73,9 +67,10 @@ export class Engine {
 
     for (let entity of Object.values(this.entities)) {
       for (let component of Object.values(entity.components)) {
-        if (component.isDirty) {
+        // Only some components are handled by the engine
+        // The rest are userland/gameplay-centric
+        if (component.isDirty && this.componentHandlers[component.type]) {
           this.componentHandlers[component.type].call(this, entity)
-
           component.isDirty = false
         }
       }
