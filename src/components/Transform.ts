@@ -4,7 +4,7 @@ import { DataObject } from 'src/core/DataObject'
 
 export class Transform extends Component {
   @DataObject.field
-  position: PIXI.Point
+  position: PIXI.Point = new PIXI.Point(0, 0)
 
   @DataObject.field
   rotation: number = 0
@@ -14,6 +14,5 @@ export class Transform extends Component {
 
   constructor() {
     super('transform')
-    this.position = new PIXI.Point(0, 0)
   }
 }

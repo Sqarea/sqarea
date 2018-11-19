@@ -92,13 +92,13 @@ export class Engine {
 
   private handleShape(entity: Entity) {
     const obj = this.engineObjects[entity.engineId]
-    const s = entity.getComponent<ShapeComponent>('shape')
-    const kind = s.getKind()
+    const shape = entity.getComponent<ShapeComponent>('shape')
+    const kind = shape.getKind()
 
     switch (kind) {
       case BOX_SHAPE:
         const graphics = new PIXI.Graphics()
-        const boxShape = s as BoxShape
+        const boxShape = shape as BoxShape
         graphics.beginFill(0xf4007a, 1)
         graphics.drawRect(0, 0, boxShape.height, boxShape.width)
         graphics.endFill()

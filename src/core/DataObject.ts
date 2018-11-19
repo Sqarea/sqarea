@@ -1,4 +1,5 @@
 export abstract class AbstractDataObject {
+  // @internal
   isDirty: boolean = false
 
   // @internal
