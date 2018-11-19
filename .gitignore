@@ -1,3 +1,5 @@
 .cache
+.vscode
+.fusebox
 node_modules
 dist

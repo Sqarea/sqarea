@@ -1,5 +1,5 @@
-import { ComponentType } from '../components/types'
-import { uuid } from '../utils'
+import { ComponentType } from 'src/components'
+import { uuid } from 'src/utils'
 
 export abstract class Component {
   // @internal

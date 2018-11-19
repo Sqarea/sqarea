@@ -1,6 +1,6 @@
 import { Component } from './Component'
-import { ComponentType } from '../components/types'
-import { uuid } from '../utils'
+import { ComponentType } from 'src/components/types'
+import { uuid } from 'src/utils'
 
 export class Entity {
   // @internal

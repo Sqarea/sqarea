@@ -1,4 +1,4 @@
-import { Entity } from '../core/Entity'
+import { Entity } from 'src/core'
 
 export class PlayableEntity extends Entity {
   mainPlayer: boolean = true
