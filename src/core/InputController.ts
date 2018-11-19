@@ -1,4 +1,8 @@
 export enum Key {
+  W = 'W',
+  A = 'A',
+  S = 'S',
+  D = 'D',
   LEFT = 'LEFT',
   DOWN = 'DOWN',
   RIGHT = 'RIGHT',
@@ -6,7 +10,12 @@ export enum Key {
   SPACE = 'SPACE',
   NONE = 'NONE'
 }
-const keyCodeToKey = {
+
+const KeyCode = {
+  87: Key.W,
+  65: Key.A,
+  83: Key.S,
+  68: Key.D,
   40: Key.DOWN,
   38: Key.UP,
   37: Key.LEFT,
@@ -17,14 +26,10 @@ const keyCodeToKey = {
 export type KeyState = Record<Key, boolean>
 
 export class InputController {
-  keyState: KeyState = {
-    [Key.LEFT]: false,
-    [Key.DOWN]: false,
-    [Key.RIGHT]: false,
-    [Key.UP]: false,
-    [Key.SPACE]: false,
-    [Key.NONE]: false
-  }
+  keyState: KeyState = Object.values(Key).reduce((keyState, key) => ({
+    ...keyState, [key]: false
+  }), {})
+  isListening: boolean = false
 
   private static instance: InputController
 
@@ -35,23 +40,45 @@ export class InputController {
     return InputController.instance
   }
 
-  private constructor() {
-    window.addEventListener('keydown', evt => {
-      const key = this.getKeyFromKeycode(evt.which)
-      this.keyState[key] = true
-    })
+  private constructor() {}
 
-    window.addEventListener('keyup', evt => {
-      const key = this.getKeyFromKeycode(evt.which)
-      this.keyState[key] = false
-    })
+  startListening() {
+    if (this.isListening) return
+    
+    window.addEventListener('keydown', this.onKeyDown)
+    window.addEventListener('keyup', this.onKeyUp)
+    
+    this.isListening = true
   }
+  
+  stopListening() {
+    if (!this.isListening) return
 
-  isDown(key: Key) {
+    window.removeEventListener('keydown', this.onKeyDown)
+    window.removeEventListener('keyup', this.onKeyUp)
+    
+    this.isListening = false
+  }  
+
+  onKeyDown = evt => {
+    const key = this.getKeyFromKeyCode(evt.which)
+    this.keyState[key] = true
+  }
+  
+  onKeyUp = evt => {
+    const key = this.getKeyFromKeyCode(evt.which)
+    this.keyState[key] = false
+  }
+  
+  isAnyDown(keys: Key[]) {
+    return keys.some(this.isDown)
+  }
+  
+  isDown = (key: Key) => {
     return this.keyState[key]
   }
 
-  getKeyFromKeycode(keyCode: number) {
-    return keyCodeToKey[keyCode] || Key.NONE
+  getKeyFromKeyCode(keyCode: number) {
+    return KeyCode[keyCode] || Key.NONE
   }
 }
