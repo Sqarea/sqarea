@@ -1,39 +1,25 @@
 import * as PIXI from 'pixi.js'
+import { Engine, InputController } from 'src/core'
+import { BoxShape, Transform } from 'src/components'
+import { MovementSystem } from 'src/systems'
+import { PlayableEntity } from 'src/entities'
 
 const view = document.getElementById('game') as HTMLCanvasElement
 const app = new PIXI.Application({ view })
+const engine = Engine.getInstance(app)
 
-function loadAssets(assets: { name: string; src: string }[], callback: () => void) {
-  for (let i = 0; i < assets.length; i++) {
-    const asset = assets[i]
-
-    if (!PIXI.loader.resources[asset.name]) {
-      PIXI.loader
-        .add(asset.name, asset.src)
-        .once('complete', () => callback())
-        .load()
-    } else if (i === assets.length - 1) {
-      callback()
-    }
-  }
-}
-
-loadAssets([{ name: 'bunny', src: 'https://pixijs.io/examples/required/assets/basics/bunny.png' }], init)
+InputController.getInstance().startListening()
 
 function init() {
-  console.log('Game started')
-
-  const bunny = new PIXI.Sprite(PIXI.loader.resources.bunny.texture)
-
-  bunny.x = app.renderer.width / 2
-  bunny.y = app.renderer.height / 2
-
-  bunny.anchor.x = 0.5
-  bunny.anchor.y = 0.5
-
-  app.stage.addChild(bunny)
-
-  app.ticker.add(() => {
-    bunny.rotation += 0.01
+  app.ticker.add(dt => {
+    engine.update(dt)
   })
 }
+
+const entity = new PlayableEntity()
+entity.addComponent(new BoxShape())
+entity.addComponent(new Transform())
+engine.addSystem(new MovementSystem(entity))
+engine.addEntity(entity)
+
+init()
