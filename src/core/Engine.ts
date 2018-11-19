@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { System, Entity } from 'src/core'
 import { ShapeComponent, Transform, BoxShape } from 'src/components'
-import { BOX_SHAPE } from 'src/components/types'
+import { BOX_SHAPE, ComponentType } from 'src/components/types'
 import { uuid } from 'src/utils'
 
 export class Engine {
@@ -11,6 +11,11 @@ export class Engine {
   app: PIXI.Application
 
   private static instance: Engine
+
+  private componentHandlers = {
+    transform: this.handleTransform,
+    shape: this.handleShape
+  }
 
   static getInstance(app: PIXI.Application): Engine {
     if (!Engine.instance) {
@@ -61,34 +66,41 @@ export class Engine {
     }
 
     for (let entity of Object.values(this.entities)) {
-      const obj = this.engineObjects[entity.engineId]
-
-      // TODO: isDirty checks
-
-      if (entity.hasComponent('transform')) {
-        const t = entity.getComponent<Transform>('transform')
-        obj.position = t.position
-        obj.rotation = t.rotation
-        obj.scale = t.scale
-      }
-
-      if (entity.hasComponent('shape')) {
-        const s = entity.getComponent<ShapeComponent>('shape')
-        const kind = s.getKind()
-
-        switch (kind) {
-          case BOX_SHAPE:
-            const graphics = new PIXI.Graphics()
-            const boxShape = s as BoxShape
-            graphics.beginFill(0xf4007a, 1)
-            graphics.drawRect(0, 0, boxShape.height, boxShape.width)
-            graphics.endFill()
-            obj.addChild(graphics)
-            break
-          default:
-            break
+      for (let component of Object.values(entity.components)) {
+        // Only some components are handled by the engine
+        // The rest are userland/gameplay-centric
+        if (component.isDirty && this.componentHandlers[component.type]) {
+          this.componentHandlers[component.type].call(this, entity)
+          component.isDirty = false
         }
       }
+    }
+  }
+
+  private handleTransform(entity: Entity) {
+    const obj = this.engineObjects[entity.engineId]
+    const t = entity.getComponent<Transform>('transform')
+    obj.position = t.position
+    obj.rotation = t.rotation
+    obj.scale = t.scale
+  }
+
+  private handleShape(entity: Entity) {
+    const obj = this.engineObjects[entity.engineId]
+    const shape = entity.getComponent<ShapeComponent>('shape')
+    const kind = shape.getKind()
+
+    switch (kind) {
+      case BOX_SHAPE:
+        const graphics = new PIXI.Graphics()
+        const boxShape = shape as BoxShape
+        graphics.beginFill(0xf4007a, 1)
+        graphics.drawRect(0, 0, boxShape.height, boxShape.width)
+        graphics.endFill()
+        obj.addChild(graphics)
+        break
+      default:
+        break
     }
   }
 }

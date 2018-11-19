@@ -10,6 +10,7 @@ export enum Key {
   SPACE = 'SPACE',
   NONE = 'NONE'
 }
+
 const KeyCode = {
   87: Key.W,
   65: Key.A,
@@ -39,8 +40,7 @@ export class InputController {
     return InputController.instance
   }
 
-  private constructor() {
-  }
+  private constructor() {}
 
   startListening() {
     if (this.isListening) return
