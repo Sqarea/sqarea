@@ -1,4 +1,4 @@
-const { FuseBox, WebIndexPlugin } = require('fuse-box')
+const { FuseBox, WebIndexPlugin, EnvPlugin } = require('fuse-box')
 
 const fuse = FuseBox.init({
   homeDir: 'src',
@@ -11,6 +11,9 @@ const fuse = FuseBox.init({
   plugins: [
     WebIndexPlugin({
       template: 'static/index.html'
+    }),
+    EnvPlugin({
+      NODE_ENV: 'dev'
     })
   ]
 })

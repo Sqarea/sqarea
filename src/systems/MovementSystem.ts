@@ -14,7 +14,9 @@ export class MovementSystem extends System {
 
   update(dt: number) {
     const t = this.entity.getComponent<Transform>('transform')
+
     if (this.input.isDown(Key.LEFT)) {
+      console.log('try')
       t.position.x -= Constants.PLAYER_SPEED * dt
     }
     if (this.input.isDown(Key.RIGHT)) {
