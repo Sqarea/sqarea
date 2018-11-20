@@ -45,6 +45,7 @@ export class Engine {
       const obj = new PIXI.Container()
       const id = uuid()
       obj['uuid'] = id
+      entity.engine = this
       entity.engineId = id
       this.entities[entity.uuid] = entity
       this.engineObjects[id] = obj
