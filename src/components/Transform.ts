@@ -1,18 +1,29 @@
-import * as PIXI from 'pixi.js'
-import { Component } from 'src/core/Component'
-import { DataObject } from 'src/core/DataObject'
+import { Vector2 } from 'src/core/math/Vector2'
+import { InternalComponent } from './InternalComponent'
 
-export class Transform extends Component {
-  @DataObject.field
-  position: PIXI.Point = new PIXI.Point(0, 0)
+export type TransformAttributes = {
+  position: Vector2
+  rotation: number
+  scale: Vector2
+}
 
-  @DataObject.field
-  rotation: number = 0
+export class Transform extends InternalComponent<TransformAttributes> {
+  constructor(initAttributes: Partial<TransformAttributes> = {}) {
+    super('transform', {
+      position: new Vector2(0, 0),
+      rotation: 0,
+      scale: new Vector2(100, 100),
+      ...initAttributes
+    })
+  }
 
-  @DataObject.field
-  scale: PIXI.Point = new PIXI.Point(1, 1)
+  updateContainer(container: PIXI.Container) {
+    container.x = this.attributes.position.x
+    container.y = this.attributes.position.y
 
-  constructor() {
-    super('transform')
+    container.rotation = this.attributes.rotation
+
+    container.width = this.attributes.scale.x
+    container.height = this.attributes.scale.y
   }
 }

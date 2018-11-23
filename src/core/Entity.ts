@@ -2,7 +2,12 @@ import { Component } from './Component'
 import { ComponentType } from 'src/components/types'
 import { uuid } from 'src/utils'
 import { Engine } from './Engine'
+import { EventManager, EventCallback } from './EventManager'
 
+/**
+ * @fires component_added
+ * @fires component_removed
+ */
 export class Entity {
   // @internal
   readonly uuid: string = uuid()
@@ -11,16 +16,18 @@ export class Entity {
   engine: Engine
 
   // @internal
-  engineId: string
+  components: Record<string, Component<any>> = {}
 
-  // @internal
-  components: Record<string, Component> = {}
+  enabled: boolean = false
 
   children: Entity[] = []
 
   private _parent: Entity | null = null
 
+  private eventManager: EventManager = new EventManager()
+
   set parent(entity: Entity | null) {
+    // TODO: prevent circular relationships
     if (entity === null) {
       this._parent = null
     } else {
@@ -32,13 +39,16 @@ export class Entity {
     return this._parent
   }
 
-  addComponent(component: Component) {
+  addComponent(component: Component<any>) {
     this.components[component.type] = component
+    this.emit('component_added', this, component.type)
     return this
   }
 
   removeComponent(type: ComponentType) {
-    delete this.components[type]
+    if (delete this.components[type]) {
+      this.emit('component_removed', this, type)
+    }
     return this
   }
 
@@ -46,20 +56,23 @@ export class Entity {
     return !!this.components[type]
   }
 
-  getComponent<T extends Component>(type: ComponentType): T {
+  getComponent<T extends Component<any>>(type: ComponentType): T {
     return this.components[type] as T
   }
 
   addChild(entity: Entity) {
-    this.children.push(entity)
-    entity.parent = this
+    // TODO: prevent circular relationships
+    if (entity !== null) {
+      this.children.push(entity)
+      entity._parent = this
+    }
   }
 
   removeChild(entity: Entity) {
     const index = this.children.indexOf(entity)
     if (index) {
       this.children.splice(index, 1)
-      entity.parent = null
+      entity._parent = null
     }
   }
 
@@ -71,5 +84,17 @@ export class Entity {
     for (let i = 0; i < this.children.length; i++) {
       this.removeChild(this.children[i])
     }
+  }
+
+  on(evt: string, cb: EventCallback) {
+    return this.eventManager.on(evt, cb)
+  }
+
+  off(evt: string, cb: EventCallback) {
+    this.eventManager.off(evt, cb)
+  }
+
+  private emit(evt: string, ...args: any[]) {
+    this.eventManager.emit(evt, args)
   }
 }
