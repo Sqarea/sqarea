@@ -2,7 +2,7 @@ import { should } from 'fuse-test-runner'
 import { Engine, Entity, System, Component } from 'src/core'
 import { future } from '../helpers'
 
-export class EngineTest {
+export class ComponentTest {
   engine: Engine
 
   beforeEach() {
