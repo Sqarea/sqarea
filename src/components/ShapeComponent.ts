@@ -1,8 +1,7 @@
-import { Component } from '../core/Component'
+import { ComponentAttributes } from 'src/core/Component'
 import { ShapeKind } from './types'
+import { InternalComponent } from './InternalComponent'
 
-export class ShapeComponent extends Component {
-  getKind(): ShapeKind {
-    return null as any
-  }
+export abstract class ShapeComponent<T extends ComponentAttributes = any> extends InternalComponent<T> {
+  abstract getKind(): ShapeKind
 }

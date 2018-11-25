@@ -1,4 +1,4 @@
-export type ComponentType = 'shape' | 'transform'
+export type ComponentType = 'shape' | 'transform' | '__test__'
 
 export const BOX_SHAPE = 'BOX_SHAPE' as 'BOX_SHAPE'
 

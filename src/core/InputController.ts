@@ -26,54 +26,58 @@ const KeyCode = {
 export type KeyState = Record<Key, boolean>
 
 export class InputController {
-  keyState: KeyState = Object.values(Key).reduce((keyState, key) => ({
-    ...keyState, [key]: false
-  }), {})
+  keyState: KeyState = Object.values(Key).reduce(
+    (keyState, key) => ({
+      ...keyState,
+      [key]: false
+    }),
+    {}
+  )
   isListening: boolean = false
 
-  private static instance: InputController
+  private static Instance: InputController
 
-  static getInstance() {
-    if (!InputController.instance) {
-      InputController.instance = new InputController()
+  static GetInstance() {
+    if (!InputController.Instance) {
+      InputController.Instance = new InputController()
     }
-    return InputController.instance
+    return InputController.Instance
   }
 
   private constructor() {}
 
   startListening() {
     if (this.isListening) return
-    
+
     window.addEventListener('keydown', this.onKeyDown)
     window.addEventListener('keyup', this.onKeyUp)
-    
+
     this.isListening = true
   }
-  
+
   stopListening() {
     if (!this.isListening) return
 
     window.removeEventListener('keydown', this.onKeyDown)
     window.removeEventListener('keyup', this.onKeyUp)
-    
+
     this.isListening = false
-  }  
+  }
 
   onKeyDown = evt => {
     const key = this.getKeyFromKeyCode(evt.which)
     this.keyState[key] = true
   }
-  
+
   onKeyUp = evt => {
     const key = this.getKeyFromKeyCode(evt.which)
     this.keyState[key] = false
   }
-  
+
   isAnyDown(keys: Key[]) {
     return keys.some(this.isDown)
   }
-  
+
   isDown = (key: Key) => {
     return this.keyState[key]
   }

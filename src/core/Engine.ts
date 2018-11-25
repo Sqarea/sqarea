@@ -1,62 +1,90 @@
-import * as PIXI from 'pixi.js'
 import { System, Entity } from 'src/core'
-import { ShapeComponent, Transform, BoxShape } from 'src/components'
-import { BOX_SHAPE, ComponentType } from 'src/components/types'
-import { uuid } from 'src/utils'
+import { EventManager, EventCallback } from './EventManager'
 
+/**
+ * The Engine keeps track of all ECS-related entities and systems.
+ * It a singleton and should only be lazily instanced via the GetInstance() method.
+ * @fires entity_added
+ * @fires entity_removed
+ * @fires system_added
+ * @fires system_removed
+ */
 export class Engine {
   systems: Record<string, System> = {}
   entities: Record<string, Entity> = {}
-  engineObjects: Record<string, PIXI.Container> = {}
-  app: PIXI.Application
 
-  private static instance: Engine
+  private static Instance: Engine
+  private eventManager: EventManager = new EventManager()
+  private pool: Entity[] = []
 
-  private componentHandlers = {
-    transform: this.handleTransform,
-    shape: this.handleShape
-  }
-
-  static getInstance(app: PIXI.Application): Engine {
-    if (!Engine.instance) {
-      Engine.instance = new Engine(app)
+  static GetInstance(): Engine {
+    if (!Engine.Instance) {
+      Engine.Instance = new Engine()
     }
-    return Engine.instance
+    return Engine.Instance
   }
 
-  private constructor(app: PIXI.Application) {
-    this.app = app
-  }
+  private constructor() {}
 
   addSystem(system: System) {
     if (!this.systems[system.uuid]) {
+      system.engine = this
       this.systems[system.uuid] = system
+      system.systemDidMount()
+      this.emit('system_added', system)
     }
     return this
   }
 
   removeSystem(system: System) {
-    delete this.systems[system.uuid]
+    if (delete this.systems[system.uuid]) {
+      this.emit('system_removed', system)
+    }
+
     return this
   }
 
   addEntity(entity: Entity) {
     if (!this.entities[entity.uuid]) {
-      const obj = new PIXI.Container()
-      const id = uuid()
-      obj['uuid'] = id
-      entity.engineId = id
+      entity.engine = this
+      entity.enabled = true
       this.entities[entity.uuid] = entity
-      this.engineObjects[id] = obj
-      this.app.stage.addChild(obj)
+      this.emit('entity_added', entity)
+
+      if (entity.children) {
+        for (let i = 0; i < entity.children.length; i++) {
+          const child = entity.children[i]
+          if (!child.engine) {
+            this.addEntity(child)
+          }
+        }
+      }
     }
     return this
   }
 
   removeEntity(entity: Entity) {
-    delete this.entities[entity.uuid]
-    this.app.stage.removeChild(this.engineObjects[entity.engineId])
+    if (delete this.entities[entity.uuid]) {
+      entity.enabled = false
+
+      for (let child of Object.values(entity.children)) {
+        this.removeEntity(child)
+      }
+
+      this.pool.push(entity)
+
+      this.emit('entity_removed', entity)
+    }
+
     return this
+  }
+
+  on(evt: string, cb: EventCallback) {
+    return this.eventManager.on(evt, cb)
+  }
+
+  off(evt: string, cb: EventCallback) {
+    this.eventManager.off(evt, cb)
   }
 
   // @internal
@@ -64,43 +92,18 @@ export class Engine {
     for (let system of Object.values(this.systems)) {
       system.update(dt)
     }
-
-    for (let entity of Object.values(this.entities)) {
-      for (let component of Object.values(entity.components)) {
-        // Only some components are handled by the engine
-        // The rest are userland/gameplay-centric
-        if (component.isDirty && this.componentHandlers[component.type]) {
-          this.componentHandlers[component.type].call(this, entity)
-          component.isDirty = false
-        }
-      }
-    }
   }
 
-  private handleTransform(entity: Entity) {
-    const obj = this.engineObjects[entity.engineId]
-    const t = entity.getComponent<Transform>('transform')
-    obj.position = t.position
-    obj.rotation = t.rotation
-    obj.scale = t.scale
+  /**
+   * Returns a free entity from the internal entity pool
+   */
+  getAvailableEntity() {
+    const ent = this.pool.pop()
+    this.addEntity(ent)
+    return ent
   }
 
-  private handleShape(entity: Entity) {
-    const obj = this.engineObjects[entity.engineId]
-    const shape = entity.getComponent<ShapeComponent>('shape')
-    const kind = shape.getKind()
-
-    switch (kind) {
-      case BOX_SHAPE:
-        const graphics = new PIXI.Graphics()
-        const boxShape = shape as BoxShape
-        graphics.beginFill(0xf4007a, 1)
-        graphics.drawRect(0, 0, boxShape.height, boxShape.width)
-        graphics.endFill()
-        obj.addChild(graphics)
-        break
-      default:
-        break
-    }
+  private emit(evt: string, ...args: any[]) {
+    this.eventManager.emit(evt, args)
   }
 }
