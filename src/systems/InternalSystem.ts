@@ -19,7 +19,7 @@ export abstract class InternalSystem extends System {
   protected addEntity = (entity: Entity) => {
     if (this.trackedEntities[entity.uuid]) return
 
-    const shape = entity.getComponent<ShapeComponent<any>>('shape')
+    const shape = entity.getComponent<ShapeComponent>('shape')
 
     // Only add qualified entities
     if (shape) {

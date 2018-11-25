@@ -292,8 +292,8 @@ export class Vector2 {
    * Gets a string with the Vector2 coordinates
    * @returns a string with the Vector2 coordinates
    */
-  public serialize(): string {
-    return this.toString()
+  public getHash(): string {
+    return `${this.x}${this.y}`
   }
 
   /**

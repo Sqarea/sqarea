@@ -9,7 +9,7 @@ export class RenderingSystem extends InternalSystem {
 
   update(_: number) {
     for (let entity of Object.values(this.trackedEntities)) {
-      const shape = entity.getComponent<ShapeComponent<any>>('shape')
+      const shape = entity.getComponent<ShapeComponent>('shape')
 
       if (shape.isDirty) {
         const container = this.app.stage.getChildByName(entity.uuid) as PIXI.Container

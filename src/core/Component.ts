@@ -1,9 +1,15 @@
 import { ComponentType } from 'src/components'
 import { uuid } from 'src/utils'
 
-export type ComponentAttributes = Record<string, string | number | { serialize(): string }>
+const GET_HASH_METHOD = 'getHash'
 
-export abstract class Component<T extends ComponentAttributes> {
+export type HashableObject = { [GET_HASH_METHOD](): string }
+
+export type ComponentAttributeEntry = string | number | HashableObject
+
+export type ComponentAttributes = Record<string, ComponentAttributeEntry>
+
+export abstract class Component<T extends ComponentAttributes = any> {
   // @internal
   uuid: string = uuid()
 
@@ -25,10 +31,10 @@ export abstract class Component<T extends ComponentAttributes> {
     this.type = type
     this._attributes = attributes
     this.attributes = new Proxy(this._attributes, {
-      get(target: T, prop: string, c) {
+      get(target: T, prop: string) {
         return target[prop]
       },
-      set(target: T, prop: string, value: any) {
+      set(target: T, prop: keyof T, value: T[keyof T]) {
         target[prop] = value
         this.isDirty = true
         return true
@@ -41,20 +47,19 @@ export abstract class Component<T extends ComponentAttributes> {
     this._isDirty = flag
   }
 
-  get isDirty() {
+  get isDirty(): boolean {
     // Dirty until set otherwise
     if (this._isDirty) return true
 
     // Lazy: check nested structures
     for (let key in this._attributes) {
-      const field = this._attributes[key]
-      const fieldType = typeof field
+      const field = this._attributes[key] as ComponentAttributeEntry
 
       // Scalar types will mark the component as dirty when individually set
-      if (fieldType !== 'number' && fieldType !== 'string' && field !== null) {
-        if ('serialize' in field) {
+      if (typeof field !== 'number' && typeof field !== 'string' && field !== null) {
+        if (GET_HASH_METHOD in field) {
           // TODO: are strings the best serialization solution?
-          const val = (field as any).serialize()
+          const val = field.getHash()
           const oldCache = this.cache[key]
 
           // Track changes in cache
@@ -66,10 +71,16 @@ export abstract class Component<T extends ComponentAttributes> {
             return true
           }
         } else {
-          throw new Error(`Component "${this.uuid}" (${this.type}) contains an unsupported data structure of type "${typeof field}"`)
+          throw new Error(
+            `Component "${this.uuid}" (${this.type}) contains an unsupported data structure of type "${
+              field.constructor ? field.constructor.name : typeof field
+            }"`
+          )
         }
       }
     }
+
+    return false
   }
 
   reset() {

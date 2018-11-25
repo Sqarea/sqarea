@@ -16,7 +16,7 @@ export class Entity {
   engine: Engine
 
   // @internal
-  components: Record<string, Component<any>> = {}
+  components: Record<string, Component> = {}
 
   enabled: boolean = false
 
@@ -39,7 +39,7 @@ export class Entity {
     return this._parent
   }
 
-  addComponent(component: Component<any>) {
+  addComponent(component: Component) {
     this.components[component.type] = component
     this.emit('component_added', this, component.type)
     return this
@@ -56,7 +56,7 @@ export class Entity {
     return !!this.components[type]
   }
 
-  getComponent<T extends Component<any>>(type: ComponentType): T {
+  getComponent<T extends Component>(type: ComponentType): T {
     return this.components[type] as T
   }
 
