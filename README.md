@@ -1,3 +1,11 @@
+# Sqarea
+
+Extraordinary game about squares + super cool ECS
+
+Alpha software
+
+## Running
+
 This project uses docker instad of NVM to manage Node versions.
 
 For development do the following:
