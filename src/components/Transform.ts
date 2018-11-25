@@ -1,3 +1,4 @@
+import * as PIXI from 'pixi.js'
 import { Vector2 } from 'src/core/math/Vector2'
 import { InternalComponent } from './InternalComponent'
 

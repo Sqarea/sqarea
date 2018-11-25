@@ -1,3 +1,4 @@
+import * as PIXI from 'pixi.js'
 import { Entity } from 'src/core'
 import { ShapeComponent, ComponentType } from 'src/components'
 import { InternalSystem } from './InternalSystem'
