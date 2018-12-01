@@ -1,4 +1,4 @@
-import { System, InputController, Key } from 'src/core'
+import { System, Key, inputController } from 'src/core'
 import { PlayableEntity, BulletEntity } from 'src/entities'
 import { Transform, CircleShape, Bullet } from 'src/components'
 import { Constants } from 'src/gameplay'
@@ -8,7 +8,6 @@ import { throttle } from 'src/utils'
 export class BulletSpreadSystem extends System {
   private entity: PlayableEntity
   private bullets: BulletEntity[] = []
-  private input: InputController = InputController.GetInstance()
 
   constructor(e: PlayableEntity) {
     super()
@@ -19,7 +18,7 @@ export class BulletSpreadSystem extends System {
   }
 
   update(dt: number) {
-    if (this.input.isDown(Key.SPACE)) {
+    if (inputController.isDown(Key.SPACE)) {
       this.addSpread()
     }
 
@@ -30,7 +29,7 @@ export class BulletSpreadSystem extends System {
         const bullet = bulletEntity.getComponent<Bullet>('bullet')
         const transform = bulletEntity.getComponent<Transform>('transform')
 
-        if (bullet.exceedsMaxDistance(transform.attributes.position)) {
+        if (this.engine && bullet.exceedsMaxDistance(transform.attributes.position)) {
           this.engine.removeEntity(bulletEntity)
         } else {
           transform.attributes.position.x += Constants.BULLET_SPEED * dt
@@ -43,7 +42,9 @@ export class BulletSpreadSystem extends System {
 
   addSpread = () => {
     // TODO: We should add 3 (or more) bullets here and animate them using position, velocity and direction
-    this.engine.addEntity(this.createBullet())
+    if (this.engine) {
+      this.engine.addEntity(this.createBullet())
+    }
   }
 
   createBullet() {

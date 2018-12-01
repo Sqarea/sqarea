@@ -1,56 +1,63 @@
-import * as PIXI from 'pixi.js'
 import { Entity } from 'src/core'
-import { ShapeComponent, ComponentType } from 'src/components'
-import { InternalSystem } from './InternalSystem'
+import { ShapeComponent, ComponentType, ShapeKind, RectShape, CircleShape } from 'src/components'
+import { renderRect, renderCircle } from 'src/renderers/renderShape'
+import { PixiSystem } from './PixiSystem'
 
-export class RenderingSystem extends InternalSystem {
-  constructor(app: PIXI.Application) {
-    super(app)
-  }
-
+export class RenderingSystem extends PixiSystem {
   update(_: number) {
-    for (let entity of Object.values(this.trackedEntities)) {
-      const shape = entity.getComponent<ShapeComponent>('shape')
+    for (let i = 0; i < this.trackedEntities.length; i++) {
+      const uuid = this.trackedEntities[i]
+      const entity = this.getEntityById(uuid)
+      let shape
 
-      if (shape.isDirty) {
-        const container = this.app.stage.getChildByName(entity.uuid) as PIXI.Container
-        const graphics = this.getContainerGraphics(container)
-        shape.updateContainer(container, graphics)
-        shape.isDirty = false
+      if (entity) {
+        shape = entity.getComponent<ShapeComponent>('shape')
+
+        if (shape.isDirty) {
+          const container = this.getPixiEntity(entity) // TODO: check type, this can be null
+
+          if (container) {
+            const kind = shape.getKind()
+
+            if (kind === ShapeKind.RECT_SHAPE) {
+              renderRect(container, shape as RectShape)
+            } else if (kind === ShapeKind.CIRCLE_SHAPE) {
+              renderCircle(container, shape as CircleShape)
+            }
+
+            shape.isDirty = false
+          }
+        }
       }
     }
   }
 
+  protected shouldTrackEntity(entity: Entity): boolean {
+    return !!entity.getComponent<ShapeComponent>('shape')
+  }
+
+  protected handleEntityCandidate = (entity: Entity) => {
+    // Even if they have no Shape component now, they may have it in the future
+    entity.on('component_added', this.handleComponentAdded)
+    entity.on('component_removed', this.handleComponentRemoved)
+  }
+
+  protected handleEntityRemoved = (entity: Entity) => {
+    const index = this.trackedEntities.indexOf(entity.uuid)
+    this.trackedEntities = this.trackedEntities.splice(index, 1)
+    entity.off('component_added', this.handleComponentAdded)
+    entity.off('component_removed', this.handleComponentRemoved)
+  }
+
   protected handleComponentAdded = (entity: Entity, componentType: ComponentType) => {
     if (componentType === 'shape') {
-      this.addEntity(entity)
+      this.trackEntity(entity)
     }
   }
 
   protected handleComponentRemoved = (entity: Entity, componentType: ComponentType) => {
     if (componentType === 'shape') {
-      this.removeEntity(entity)
+      this.untrackEntity(entity)
     }
-  }
-
-  private getContainerGraphics(container: PIXI.Container): PIXI.Graphics {
-    let ref: PIXI.DisplayObject = container.children[0]
-    let graphics: PIXI.Graphics
-
-    if (!ref || (ref && !ref['isGraphic'])) {
-      graphics = new PIXI.Graphics()
-      graphics['isGraphic'] = true // faster than instanceof
-
-      if (ref) {
-        container.removeChildAt(0)
-      }
-
-      container.addChild(graphics)
-    } else {
-      // reuse graphics instance
-      graphics = ref as PIXI.Graphics
-      graphics.clear()
-    }
-    return graphics
   }
 }

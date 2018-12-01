@@ -1,34 +1,48 @@
-import * as PIXI from 'pixi.js'
 import { Entity } from 'src/core'
 import { Transform, ComponentType } from 'src/components'
-import { InternalSystem } from './InternalSystem'
+import { PixiSystem } from './PixiSystem'
+import { renderTransform } from 'src/renderers/renderTransform'
 
-export class TransformSystem extends InternalSystem {
-  constructor(app: PIXI.Application) {
-    super(app)
-  }
-
+export class TransformSystem extends PixiSystem {
   update(_: number) {
-    for (let entity of Object.values(this.trackedEntities)) {
-      const transform = entity.getComponent<Transform>('transform')
+    for (let i = 0; i < this.trackedEntities.length; i++) {
+      const uuid = this.trackedEntities[i]
+      const entity = this.getEntityById(uuid)
 
-      if (transform.isDirty) {
-        const container = this.app.stage.getChildByName(entity.uuid) as PIXI.Container
-        transform.updateContainer(container, new PIXI.Graphics())
-        transform.isDirty = false
+      if (entity) {
+        const transform = entity.getComponent<Transform>('transform')
+
+        if (transform.isDirty) {
+          const container = this.getPixiEntity(entity)
+
+          if (container) {
+            renderTransform(container, transform)
+            transform.isDirty = false
+          }
+        }
       }
     }
   }
 
+  protected shouldTrackEntity(entity: Entity) {
+    const transform = entity.getComponent<Transform>('transform')
+
+    if (transform) {
+      return true
+    }
+
+    return false
+  }
+
   protected handleComponentAdded = (entity: Entity, componentType: ComponentType) => {
     if (componentType === 'transform') {
-      this.addEntity(entity)
+      this.trackEntity(entity)
     }
   }
 
   protected handleComponentRemoved = (entity: Entity, componentType: ComponentType) => {
     if (componentType === 'transform') {
-      this.removeEntity(entity)
+      this.untrackEntity(entity)
     }
   }
 }

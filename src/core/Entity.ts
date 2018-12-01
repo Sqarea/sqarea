@@ -1,22 +1,27 @@
 import { Component } from './Component'
+import { EventManager, EventCallback } from './EventManager'
 import { ComponentType } from 'src/components/types'
 import { uuid } from 'src/utils'
 import { Engine } from './Engine'
-import { EventManager, EventCallback } from './EventManager'
 
 /**
  * @fires component_added
  * @fires component_removed
+ * @fires child_added
+ * @fires child_removed
  */
 export class Entity {
   // @internal
   readonly uuid: string = uuid()
 
   // @internal
-  engine: Engine
+  debugName: string = 'Unamed Entity'
 
   // @internal
   components: Record<string, Component> = {}
+
+  // @internal
+  engine: Engine | undefined
 
   enabled: boolean = false
 
@@ -62,17 +67,20 @@ export class Entity {
 
   addChild(entity: Entity) {
     // TODO: prevent circular relationships
-    if (entity !== null) {
-      this.children.push(entity)
-      entity._parent = this
-    }
+    this.children.push(entity)
+    entity._parent = this
+
+    this.emit('child_added', this, entity)
   }
 
   removeChild(entity: Entity) {
     const index = this.children.indexOf(entity)
+
     if (index) {
       this.children.splice(index, 1)
       entity._parent = null
+
+      this.emit('child_removed', this, entity)
     }
   }
 

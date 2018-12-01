@@ -3,47 +3,68 @@ import { EventManager, EventCallback } from './EventManager'
 
 /**
  * The Engine keeps track of all ECS-related entities and systems.
- * It a singleton and should only be lazily instanced via the GetInstance() method.
  * @fires entity_added
  * @fires entity_removed
  * @fires system_added
  * @fires system_removed
  */
 export class Engine {
-  private static Instance: Engine
-
-  systems: Record<string, System> = {}
+  systems: System[] = []
   entities: Record<string, Entity> = {}
-  engineObjects: Record<string, PIXI.Container> = {}
-  app: PIXI.Application
 
   private eventManager: EventManager = new EventManager()
   private pool: Entity[] = []
 
-  private constructor() {}
-
-  static GetInstance(): Engine {
-    if (!Engine.Instance) {
-      Engine.Instance = new Engine()
-    }
-    return Engine.Instance
+  constructor() {
+    // stub
   }
 
-  addSystem(system: System) {
-    if (!this.systems[system.uuid]) {
-      system.engine = this
-      this.systems[system.uuid] = system
-      system.systemDidMount()
-      this.emit('system_added', system)
+  /**
+   * Adds a new System to the engine's update loop.
+   * @param system - an instance of a System
+   * @param priority - Sets the order of execution for the given System
+   */
+  addSystem(system: System, priority: number = system.priority) {
+    if (this.systems.indexOf(system) !== -1) {
+      console.log(`Engine: System "${system.uuid}" (${system.constructor.name}) is already added. Skipping...`)
+      return
     }
+
+    system.engine = this
+
+    // Priorities can be set both when calling this method and when instancing the system
+    if (priority !== system.priority) {
+      system.priority = priority
+    }
+
+    if (this.systems.length > 0) {
+      for (let i = 0; i < this.systems.length; i++) {
+        const candidate = this.systems[i]
+        const isLast = i === this.systems.length - 1
+
+        if (candidate.priority > priority) {
+          this.systems.splice(i, 0, system)
+          break
+        } else if (isLast) {
+          this.systems.splice(i + 1, 0, system)
+          break
+        }
+      }
+    } else {
+      this.systems.splice(1, 0, system)
+    }
+
+    system.systemDidMount()
+
+    this.emit('system_added', system)
+
     return this
   }
 
   removeSystem(system: System) {
-    if (delete this.systems[system.uuid]) {
-      this.emit('system_removed', system)
-    }
-
+    const index = this.systems.indexOf(system)
+    this.systems = this.systems.splice(index, 1)
+    this.emit('system_removed', system)
     return this
   }
 
@@ -92,7 +113,8 @@ export class Engine {
 
   // @internal
   update(dt: number) {
-    for (let system of Object.values(this.systems)) {
+    for (let i = 0; i < this.systems.length; i++) {
+      const system = this.systems[i]
       system.update(dt)
     }
   }
@@ -100,13 +122,18 @@ export class Engine {
   /**
    * Returns a free entity from the internal entity pool
    */
-  getAvailableEntity() {
-    const ent = this.pool.pop()
-    this.addEntity(ent)
-    return ent
+  getAvailableEntity(): Entity | null {
+    const ent = this.pool.shift()
+    if (ent) {
+      this.addEntity(ent)
+      return ent
+    }
+    return null
   }
 
   private emit(evt: string, ...args: any[]) {
     this.eventManager.emit(evt, args)
   }
 }
+
+export const engine = new Engine()
