@@ -5,7 +5,7 @@ export type Future<T> = Promise<T> & {
 }
 
 export function future<T = any>(): Future<T> {
-  let resolver: (x: T) => void = (x: T) => {
+  let resolver: (x: T) => void = (_: T) => {
     throw new Error('Error initilizing mutex')
   }
   let rejecter: (x: Error) => void = (x: Error) => {
